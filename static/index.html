@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-Model Answer Platform</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#fff; --text:#1a1a1a; --muted:#666;
+  --border:#e2e4e8; --accent:#5b5ce6; --ok:#1a7f37; --err:#c0392b; --warn:#b8860b;
+}
+*{box-sizing:border-box}
+body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; padding:24px 16px 48px}
+.wrap{max-width:800px; margin:0 auto}
+h1{font-size:1.4rem; margin:0 0 4px}
+.sub{color:var(--muted); font-size:0.9rem; margin:0 0 20px}
+textarea{width:100%; min-height:80px; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font:inherit; resize:vertical}
+.models{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0}
+.model-chip{border:1px solid var(--border); border-radius:20px; padding:6px 12px; cursor:pointer; user-select:none; font-size:0.85rem; background:var(--card)}
+.model-chip input{margin-right:6px}
+.row{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:10px 0 18px}
+.row label{font-size:0.85rem; color:var(--muted)}
+input[type=number]{width:70px; padding:6px 8px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); font:inherit}
+button{background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 18px; font-size:0.95rem; cursor:pointer}
+button:disabled{opacity:0.5; cursor:default}
+.error-banner{background:rgba(192,57,43,0.12); color:var(--err); border-radius:8px; padding:8px 12px; font-size:0.85rem; margin-bottom:10px; display:none}
+.final{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px}
+.final h2{font-size:1rem; margin:0 0 8px}
+.final .text{font-size:0.95rem; line-height:1.5; white-space:pre-wrap}
+.uncertainty{margin-top:10px; font-size:0.85rem; color:var(--warn); background:rgba(184,134,11,0.1); border-radius:8px; padding:8px 10px}
+.analysis{margin-top:10px; font-size:0.85rem; color:var(--muted)}
+.analysis ul{margin:4px 0 0 18px; padding:0}
+.caveat{font-size:0.75rem; color:var(--muted); margin-top:10px; font-style:italic}
+.summary{font-size:0.85rem; color:var(--muted); margin:6px 0 16px; min-height:1.2em}
+.results{display:flex; flex-direction:column; gap:12px}
+.card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px}
+.card-head{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap}
+.card-head strong{font-size:0.95rem}
+.badge{font-size:0.75rem; padding:3px 9px; border-radius:12px; font-weight:600; white-space:nowrap}
+.badge.ok{background:rgba(26,127,55,0.15); color:var(--ok)}
+.badge.error{background:rgba(192,57,43,0.15); color:var(--err)}
+.badge.timeout{background:rgba(184,134,11,0.15); color:var(--warn)}
+.badge.pending{background:rgba(91,92,230,0.15); color:var(--accent)}
+.meta{font-size:0.78rem; color:var(--muted); margin-top:6px}
+.text{margin-top:8px; font-size:0.9rem; line-height:1.4; white-space:pre-wrap}
+.error-text{margin-top:8px; font-size:0.9rem; color:var(--err)}
+.note{font-size:0.78rem; color:var(--muted); margin-top:24px; line-height:1.5}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Multi-Model Answer Platform</h1>
+  <p class="sub">Sends your question to several models at once, then a coordinator combines what came back.</p>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <textarea id="question" placeholder="Ask a question...">What is Python?</textarea>
+
+  <div class="models" id="modelPicker">Loading models…</div>
+
+  <div class="row">
+    <label>Timeout (seconds): <input type="number" id="timeout" value="30" min="0.5" step="0.5"></label>
+    <button id="askBtn">Ask all models</button>
+  </div>
+
+  <div class="summary" id="summary"></div>
+  <div id="finalWrap"></div>
+  <div class="results" id="results"></div>
+
+  <p class="note">
+    The combined answer is produced by a coordinator step that compares the individual responses -
+    it is a useful synthesis, not a verified or guaranteed-correct answer. Every model's own response
+    stays visible below so you can check how the combined answer was formed. This build uses mock
+    models, so text is simulated - the plumbing (parallel calls, timeouts, error handling, synthesis)
+    is real and works the same way once real providers are configured.
+  </p>
+</div>
+
+<script>
+const els = {
+  errorBanner: document.getElementById("errorBanner"),
+  picker: document.getElementById("modelPicker"),
+  question: document.getElementById("question"),
+  timeout: document.getElementById("timeout"),
+  askBtn: document.getElementById("askBtn"),
+  summary: document.getElementById("summary"),
+  finalWrap: document.getElementById("finalWrap"),
+  results: document.getElementById("results"),
+};
+
+function showError(msg) {
+  els.errorBanner.textContent = msg;
+  els.errorBanner.style.display = msg ? "block" : "none";
+}
+
+async function loadModels() {
+  try {
+    const res = await fetch("/api/models");
+    if (!res.ok) throw new Error(`Server returned ${res.status}`);
+    const models = await res.json();
+    els.picker.innerHTML = models.map((m, i) => `
+      <label class="model-chip">
+        <input type="checkbox" value="${m.id}" ${i < 3 ? "checked" : ""}> ${m.label}
+      </label>`).join("");
+  } catch (err) {
+    showError(`Could not load the model list: ${err.message}. Is the server running?`);
+    els.picker.textContent = "";
+  }
+}
+
+function selectedModelIds() {
+  return [...els.picker.querySelectorAll("input:checked")].map(cb => cb.value);
+}
+
+function renderFinal(coord) {
+  if (!coord) { els.finalWrap.innerHTML = ""; return; }
+  const uncertainty = coord.uncertainty_note
+    ? `<div class="uncertainty">⚠ ${coord.uncertainty_note}</div>` : "";
+  const agreements = coord.analysis?.agreements?.length
+    ? `<div><strong>Agreements</strong><ul>${coord.analysis.agreements.map(a => `<li>${a}</li>`).join("")}</ul></div>` : "";
+  const disagreements = coord.analysis?.disagreements?.length
+    ? `<div><strong>Disagreements</strong><ul>${coord.analysis.disagreements.map(d => `<li>${d}</li>`).join("")}</ul></div>` : "";
+  const analysisBlock = (agreements || disagreements)
+    ? `<div class="analysis">${agreements}${disagreements}</div>` : "";
+  els.finalWrap.innerHTML = `
+    <div class="final">
+      <h2>Combined answer</h2>
+      <div class="text">${coord.final_answer}</div>
+      ${uncertainty}
+      ${analysisBlock}
+      <div class="caveat">Synthesized by a coordinator model, which can compare and merge answers but cannot guarantee correctness.</div>
+    </div>`;
+}
+
+function renderPending(modelIds) {
+  els.results.innerHTML = modelIds.map(id => `
+    <div class="card" id="card-${id}">
+      <div class="card-head"><strong>${id}</strong><span class="badge pending">running…</span></div>
+    </div>`).join("");
+  els.finalWrap.innerHTML = "";
+  els.summary.textContent = `Asking ${modelIds.length} model(s)...`;
+}
+
+function renderResult(r) {
+  const el = document.getElementById(`card-${r.model_id}`);
+  if (!el) return;
+  const meta = r.status === "ok"
+    ? `${r.latency_ms} ms · ~${r.tokens_in}+${r.tokens_out} tokens${r.est_cost_usd != null ? ` · ~$${r.est_cost_usd.toFixed(5)}` : ""}`
+    : `${r.latency_ms} ms`;
+  const body = r.status === "ok"
+    ? `<div class="text">${r.text}</div>`
+    : `<div class="error-text">${r.error_message}</div>`;
+  el.innerHTML = `
+    <div class="card-head"><strong>${r.label}</strong><span class="badge ${r.status}">${r.status}</span></div>
+    <div class="meta">${meta}</div>
+    ${body}`;
+}
+
+els.askBtn.addEventListener("click", async () => {
+  showError("");
+  const question = els.question.value.trim();
+  const timeoutSec = parseFloat(els.timeout.value) || 30;
+  const modelIds = selectedModelIds();
+
+  if (!question) { els.summary.textContent = "Please enter a question."; return; }
+  if (modelIds.length < 2) { els.summary.textContent = "Pick at least 2 models."; return; }
+
+  els.askBtn.disabled = true;
+  renderPending(modelIds);
+
+  try {
+    const res = await fetch("/api/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, model_ids: modelIds, timeout_seconds: timeoutSec }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.detail ? JSON.stringify(body.detail) : `Server returned ${res.status}`);
+    }
+
+    const data = await res.json();
+    data.results.forEach(renderResult);
+    renderFinal(data.coordinator);
+    els.summary.textContent = `${data.succeeded} succeeded, ${data.failed} failed — total time ${data.total_latency_ms} ms`;
+  } catch (err) {
+    showError(`Request failed: ${err.message}`);
+    els.summary.textContent = "";
+  } finally {
+    els.askBtn.disabled = false;
+  }
+});
+
+loadModels();
+</script>
+</body>
+</html>

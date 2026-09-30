@@ -1,0 +1,50 @@
+# Model registry. Prices are ESTIMATES per 1,000 tokens - edit them freely.
+# In M1 every model is a mock. Real providers arrive in milestone 4.
+default_timeout_seconds: 30
+
+models:
+  - id: mock-fast
+    label: Mock Fast
+    provider: mock
+    price_per_1k_input_usd: 0.0005
+    price_per_1k_output_usd: 0.0015
+    mock: {min_delay: 0.2, max_delay: 0.8, error_rate: 0.0}
+
+  - id: mock-thoughtful
+    label: Mock Thoughtful
+    provider: mock
+    price_per_1k_input_usd: 0.003
+    price_per_1k_output_usd: 0.015
+    mock: {min_delay: 0.8, max_delay: 1.8, error_rate: 0.0}
+
+  - id: mock-verbose
+    label: Mock Verbose
+    provider: mock
+    price_per_1k_input_usd: 0.001
+    price_per_1k_output_usd: 0.004
+    mock: {min_delay: 0.5, max_delay: 1.5, error_rate: 0.0}
+
+  # Fails about 40% of the time - use it to test error handling.
+  - id: mock-flaky
+    label: Mock Flaky
+    provider: mock
+    price_per_1k_input_usd: 0.001
+    price_per_1k_output_usd: 0.002
+    mock: {min_delay: 0.3, max_delay: 1.0, error_rate: 0.4}
+
+  # Always takes 5-8 seconds - send timeout_seconds=2 to see a timeout.
+  - id: mock-slow
+    label: Mock Slow
+    provider: mock
+    price_per_1k_input_usd: 0.001
+    price_per_1k_output_usd: 0.002
+    mock: {min_delay: 5.0, max_delay: 8.0, error_rate: 0.0}
+
+# The coordinator reads the successful panel answers and produces one
+# combined answer plus an agreement/disagreement breakdown. In mock mode
+# this is a rule-based stand-in - see app/coordinator.py - not a real
+# comparison of meaning. Swap provider to a real one in a later milestone.
+coordinator:
+  id: mock-coordinator
+  label: Mock Coordinator
+  provider: mock
