@@ -18,6 +18,10 @@ class MockSettings(BaseModel):
         if self.max_delay < self.min_delay:
             raise ValueError("max_delay must be >= min_delay")
         return self
+class HttpSettings(BaseModel):
+    api_key_env: str
+    model: str
+    endpoint: str | None = None    
 
 
 class ModelConfig(BaseModel):
@@ -27,6 +31,7 @@ class ModelConfig(BaseModel):
     price_per_1k_input_usd: float = Field(0.0, ge=0)
     price_per_1k_output_usd: float = Field(0.0, ge=0)
     mock: MockSettings = Field(default_factory=MockSettings)
+    http: HttpSettings | None = None
 
 
 class Settings(BaseModel):

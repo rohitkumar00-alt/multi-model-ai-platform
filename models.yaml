@@ -44,6 +44,19 @@ models:
 # combined answer plus an agreement/disagreement breakdown. In mock mode
 # this is a rule-based stand-in - see app/coordinator.py - not a real
 # comparison of meaning. Swap provider to a real one in a later milestone.
+- id: groq-llama
+    label: Groq Llama 3.1 8B
+    provider: groq
+    price_per_1k_input_usd: 0.0
+    price_per_1k_output_usd: 0.0
+    http: {api_key_env: GROQ_API_KEY, model: llama-3.1-8b-instant}
+
+  - id: gemini-flash
+    label: Gemini 2.0 Flash
+    provider: gemini
+    price_per_1k_input_usd: 0.0
+    price_per_1k_output_usd: 0.0
+    http: {api_key_env: GEMINI_API_KEY, model: gemini-2.0-flash}
 coordinator:
   id: mock-coordinator
   label: Mock Coordinator
