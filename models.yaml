@@ -1,5 +1,4 @@
 # Model registry. Prices are ESTIMATES per 1,000 tokens - edit them freely.
-# In M1 every model is a mock. Real providers arrive in milestone 4.
 default_timeout_seconds: 30
 
 models:
@@ -40,11 +39,7 @@ models:
     price_per_1k_output_usd: 0.002
     mock: {min_delay: 5.0, max_delay: 8.0, error_rate: 0.0}
 
-# The coordinator reads the successful panel answers and produces one
-# combined answer plus an agreement/disagreement breakdown. In mock mode
-# this is a rule-based stand-in - see app/coordinator.py - not a real
-# comparison of meaning. Swap provider to a real one in a later milestone.
-- id: groq-llama
+  - id: groq-llama
     label: Groq Llama 3.1 8B
     provider: groq
     price_per_1k_input_usd: 0.0
@@ -57,7 +52,9 @@ models:
     price_per_1k_input_usd: 0.0
     price_per_1k_output_usd: 0.0
     http: {api_key_env: GEMINI_API_KEY, model: gemini-2.0-flash}
+
 coordinator:
   id: mock-coordinator
   label: Mock Coordinator
   provider: mock
+  
