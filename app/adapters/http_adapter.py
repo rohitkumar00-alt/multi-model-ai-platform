@@ -74,4 +74,18 @@ class GeminiAdapter(ModelAdapter):
         except httpx.RequestError as e:
             raise ModelCallError(f"Network error calling gemini: {e}") from e
 
-        if resp.status_code !=
+        if resp.status_code != 200:
+            raise ModelCallError(f"gemini returned HTTP {resp.status_code}: {resp.text[:200]}")
+
+        data = resp.json()
+        try:
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
+        except (KeyError, IndexError) as e:
+            raise ModelCallError("Unexpected response shape from gemini") from e
+
+        usage = data.get("usageMetadata", {})
+        return Generation(
+            text=text,
+            tokens_in=usage.get("promptTokenCount"),
+            tokens_out=usage.get("candidatesTokenCount"),
+        )
