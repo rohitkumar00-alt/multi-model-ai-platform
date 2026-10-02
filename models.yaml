@@ -51,7 +51,7 @@ models:
     provider: gemini
     price_per_1k_input_usd: 0.0
     price_per_1k_output_usd: 0.0
-    http: {api_key_env: GEMINI_API_KEY, model: gemini-3.0-flash}
+    http: {api_key_env: GEMINI_API_KEY, model: gemini-flash-latest}
 
 coordinator:
   id: mock-coordinator
