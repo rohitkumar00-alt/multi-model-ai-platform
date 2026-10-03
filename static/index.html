@@ -4,47 +4,75 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Multi-Model Answer Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f6f7f9; --card:#fff; --text:#1a1a1a; --muted:#666;
-  --border:#e2e4e8; --accent:#5b5ce6; --ok:#1a7f37; --err:#c0392b; --warn:#b8860b;
+  --bg:#000000; --card:#121212; --card-2:#161616; --text:#edeef1; --muted:#8993a6;
+  --border:#2a2a2a; --accent:#e0a64c; --accent-dim:#e0a64c33;
+  --ok:#5fb88a; --err:#e2685f; --warn:#e0a64c;
+  --serif:'Fraunces', Georgia, serif; --sans:'Inter', -apple-system, Segoe UI, sans-serif; --mono:'JetBrains Mono', 'Courier New', monospace;
 }
 *{box-sizing:border-box}
-body{margin:0; background:var(--bg); color:var(--text); font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; padding:24px 16px 48px}
-.wrap{max-width:800px; margin:0 auto}
-h1{font-size:1.4rem; margin:0 0 4px}
-.sub{color:var(--muted); font-size:0.9rem; margin:0 0 20px}
-textarea{width:100%; min-height:80px; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--card); color:var(--text); font:inherit; resize:vertical}
-.models{display:flex; flex-wrap:wrap; gap:10px; margin:14px 0}
-.model-chip{border:1px solid var(--border); border-radius:20px; padding:6px 12px; cursor:pointer; user-select:none; font-size:0.85rem; background:var(--card)}
-.model-chip input{margin-right:6px}
-.row{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:10px 0 18px}
-.row label{font-size:0.85rem; color:var(--muted)}
-input[type=number]{width:70px; padding:6px 8px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); font:inherit}
-button{background:var(--accent); color:#fff; border:none; border-radius:10px; padding:10px 18px; font-size:0.95rem; cursor:pointer}
-button:disabled{opacity:0.5; cursor:default}
-.error-banner{background:rgba(192,57,43,0.12); color:var(--err); border-radius:8px; padding:8px 12px; font-size:0.85rem; margin-bottom:10px; display:none}
-.final{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px}
-.final h2{font-size:1rem; margin:0 0 8px}
-.final .text{font-size:0.95rem; line-height:1.5; white-space:pre-wrap}
-.uncertainty{margin-top:10px; font-size:0.85rem; color:var(--warn); background:rgba(184,134,11,0.1); border-radius:8px; padding:8px 10px}
-.analysis{margin-top:10px; font-size:0.85rem; color:var(--muted)}
-.analysis ul{margin:4px 0 0 18px; padding:0}
-.caveat{font-size:0.75rem; color:var(--muted); margin-top:10px; font-style:italic}
-.summary{font-size:0.85rem; color:var(--muted); margin:6px 0 16px; min-height:1.2em}
-.results{display:flex; flex-direction:column; gap:12px}
-.card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px}
-.card-head{display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap}
-.card-head strong{font-size:0.95rem}
-.badge{font-size:0.75rem; padding:3px 9px; border-radius:12px; font-weight:600; white-space:nowrap}
-.badge.ok{background:rgba(26,127,55,0.15); color:var(--ok)}
-.badge.error{background:rgba(192,57,43,0.15); color:var(--err)}
-.badge.timeout{background:rgba(184,134,11,0.15); color:var(--warn)}
-.badge.pending{background:rgba(91,92,230,0.15); color:var(--accent)}
-.meta{font-size:0.78rem; color:var(--muted); margin-top:6px}
-.text{margin-top:8px; font-size:0.9rem; line-height:1.4; white-space:pre-wrap}
-.error-text{margin-top:8px; font-size:0.9rem; color:var(--err)}
-.note{font-size:0.78rem; color:var(--muted); margin-top:24px; line-height:1.5}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); padding:48px 20px 64px}
+.wrap{max-width:720px; margin:0 auto}
+h1{font-family:var(--serif); font-weight:600; font-size:1.9rem; letter-spacing:-0.01em; margin:0 0 6px}
+.sub{color:var(--muted); font-size:0.95rem; line-height:1.5; margin:0 0 32px; max-width:52ch}
+
+textarea{width:100%; min-height:88px; padding:14px 16px; border-radius:10px; border:1px solid var(--border);
+  background:var(--card); color:var(--text); font:inherit; font-size:0.95rem; resize:vertical}
+textarea:focus{outline:2px solid var(--accent); outline-offset:1px}
+
+.models{display:flex; flex-wrap:wrap; gap:8px; margin:18px 0}
+.model-chip{border:1px solid var(--border); border-radius:8px; padding:7px 13px; cursor:pointer; user-select:none;
+  font-size:0.85rem; background:var(--card); color:var(--muted); transition:border-color .15s, color .15s}
+.model-chip:has(input:checked){border-color:var(--accent); color:var(--text)}
+.model-chip input{margin-right:7px; accent-color:var(--accent)}
+
+.row{display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin:8px 0 28px}
+.row label{font-size:0.82rem; color:var(--muted); font-family:var(--mono)}
+input[type=number]{width:64px; padding:6px 8px; border-radius:6px; border:1px solid var(--border);
+  background:var(--card); color:var(--text); font:inherit; font-family:var(--mono)}
+
+button{background:var(--accent); color:#17130a; border:none; border-radius:8px; padding:11px 20px;
+  font-size:0.9rem; font-weight:600; cursor:pointer; transition:opacity .15s}
+button:hover:not(:disabled){opacity:0.88}
+button:disabled{opacity:0.4; cursor:default}
+
+.error-banner{background:#e2685f1a; color:var(--err); border:1px solid #e2685f44; border-radius:8px;
+  padding:10px 14px; font-size:0.85rem; margin-bottom:16px; display:none}
+
+.final{background:var(--card-2); border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:20px}
+.final h2{font-family:var(--serif); font-weight:600; font-size:1.05rem; margin:0 0 10px; color:var(--accent)}
+.final .text{font-size:0.95rem; line-height:1.6; white-space:pre-wrap}
+
+.uncertainty{margin-top:14px; font-size:0.82rem; color:var(--warn); background:#e0a64c14;
+  border-left:2px solid var(--warn); border-radius:4px; padding:9px 12px}
+.analysis{margin-top:14px; font-size:0.84rem; color:var(--muted)}
+.analysis strong{color:var(--text); font-weight:600; font-size:0.8rem; font-family:var(--mono)}
+.analysis ul{margin:6px 0 0 18px; padding:0}
+.analysis ul + strong{margin-top:10px; display:inline-block}
+.caveat{font-size:0.76rem; color:var(--muted); margin-top:16px; padding-top:14px; border-top:1px solid var(--border)}
+
+.summary{font-size:0.82rem; color:var(--muted); font-family:var(--mono); margin:4px 0 20px; min-height:1.2em}
+
+.results{display:flex; flex-direction:column; gap:10px}
+.card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 18px}
+.card-head{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap}
+.card-head strong{font-size:0.92rem; font-weight:600}
+
+.badge{font-size:0.7rem; padding:3px 10px; border-radius:20px; font-weight:500; white-space:nowrap; font-family:var(--mono)}
+.badge.ok{background:#5fb88a1f; color:var(--ok)}
+.badge.error{background:#e2685f1f; color:var(--err)}
+.badge.timeout{background:#e0a64c1f; color:var(--warn)}
+.badge.pending{background:#8993a61f; color:var(--muted)}
+
+.meta{font-size:0.76rem; color:var(--muted); margin-top:7px; font-family:var(--mono)}
+.text{margin-top:10px; font-size:0.9rem; line-height:1.55; white-space:pre-wrap; color:var(--text)}
+.error-text{margin-top:10px; font-size:0.87rem; color:var(--err); font-family:var(--mono)}
+
+.note{font-size:0.78rem; color:var(--muted); margin-top:40px; line-height:1.6; padding-top:20px; border-top:1px solid var(--border)}
 </style>
 </head>
 <body>
@@ -59,7 +87,7 @@ button:disabled{opacity:0.5; cursor:default}
   <div class="models" id="modelPicker">Loading models…</div>
 
   <div class="row">
-    <label>Timeout (seconds): <input type="number" id="timeout" value="30" min="0.5" step="0.5"></label>
+    <label>timeout_sec <input type="number" id="timeout" value="30" min="0.5" step="0.5"></label>
     <button id="askBtn">Ask all models</button>
   </div>
 
@@ -70,9 +98,7 @@ button:disabled{opacity:0.5; cursor:default}
   <p class="note">
     The combined answer is produced by a coordinator step that compares the individual responses -
     it is a useful synthesis, not a verified or guaranteed-correct answer. Every model's own response
-    stays visible below so you can check how the combined answer was formed. This build uses mock
-    models, so text is simulated - the plumbing (parallel calls, timeouts, error handling, synthesis)
-    is real and works the same way once real providers are configured.
+    stays visible below so you can check how the combined answer was formed.
   </p>
 </div>
 
